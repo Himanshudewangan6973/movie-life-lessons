@@ -3,28 +3,20 @@ name: Sync to Hugging Face Hub
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write  # Required for Hugging Face Trusted Publishers OIDC authentication
-      contents: read
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install hf CLI and sync to Space
-        env:
-          HF_OIDC_RESOURCE: spaces/himanshu-d/movie-life-lessons-bot
-        run: |
-          curl -LsSf https://hf.co/cli/install.sh | bash
-          export PATH="$HOME/.local/bin:$PATH"
-          hf upload spaces/himanshu-d/movie-life-lessons-bot . \
-            --repo-type=space \
-            --exclude ".git/**" \
-            --exclude ".github/**" \
-            --exclude "venv/**" \
-            --commit-message "Auto-sync from GitHub"
+      - uses: huggingface/hub-sync@v0.3.0
+        with:
+          github_repo_id: ${{ github.repository }}
+          huggingface_repo_id: himanshu-d/movie-life-lessons-bot
+          hf_token: ${{ secrets.HF_TOKEN }}
+          repo_type: space
+          space_sdk: docker
